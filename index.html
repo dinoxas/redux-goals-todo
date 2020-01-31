@@ -6,6 +6,7 @@
     <script src="https://unpkg.com/react@16.3.0-alpha.1/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@16.3.0-alpha.1/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+    <script src="index.js"></script>
   </head>
   <body>
     <div id="app"></div>
@@ -25,6 +26,7 @@
       const TOGGLE_TODO = "TOGGLE_TODO";
       const ADD_GOAL = "ADD_GOAL";
       const REMOVE_GOAL = "REMOVE_GOAL";
+      const RECEIVE_DATA = "RECEIVE_DATA";
 
       function addTodoAction(todo) {
         return {
@@ -58,6 +60,14 @@
         return {
           type: REMOVE_GOAL,
           id
+        };
+      }
+
+      function receiveDataAction(todos, goals) {
+        return {
+          type: RECEIVE_DATA,
+          todos,
+          goals
         };
       }
 
@@ -101,6 +111,8 @@
                 ? todo
                 : Object.assign({}, todo, { complete: !todo.complete })
             );
+          case RECEIVE_DATA:
+            return action.todos;
           default:
             return state;
         }
@@ -112,6 +124,17 @@
             return state.concat([action.goal]);
           case REMOVE_GOAL:
             return state.filter(goal => goal.id !== action.id);
+          case RECEIVE_DATA:
+            return action.goals;
+          default:
+            return state;
+        }
+      }
+
+      function loading(state = true, action) {
+        switch (action.type) {
+          case RECEIVE_DATA:
+            return false;
           default:
             return state;
         }
@@ -120,7 +143,8 @@
       const store = Redux.createStore(
         Redux.combineReducers({
           todos,
-          goals
+          goals,
+          loading
         }),
         Redux.applyMiddleware(checker, logger)
       );
@@ -226,11 +250,20 @@
           const { store } = this.props;
 
           store.subscribe(() => this.forceUpdate());
+
+          Promise.all([API.fetchTodos(), API.fetchGoals()]).then(
+            ([todos, goals]) => {
+              store.dispatch(receiveDataAction(todos, goals));
+            }
+          );
         }
         render() {
           const { store } = this.props;
-          const { todos, goals } = store.getState();
+          const { todos, goals, loading } = store.getState();
 
+          if (loading === true) {
+            return <h3>Loading data...</h3>;
+          }
           return (
             <div>
               <Todos todos={todos} store={store} />
