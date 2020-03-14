@@ -12,7 +12,7 @@ Simple goals and todos application with the following features:
 Note: Open the console or use the Redux DevTools to see the current action and state of the app. 
 
 
-[Demo](https://dinoxas-fake-twitter.netlify.com)
+[Demo](https://dinoxas-goalstodos.netlify.com/)
 
 ## Built With
 
